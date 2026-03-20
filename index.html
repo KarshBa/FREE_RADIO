@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CC Radio Player</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --panel-2:#1f2937;
+      --text:#f8fafc;
+      --muted:#94a3b8;
+      --accent:#22c55e;
+      --accent-2:#16a34a;
+      --warn:#f59e0b;
+      --error:#ef4444;
+      --border:#334155;
+      --shadow:0 10px 30px rgba(0,0,0,.28);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(180deg,#0b1220 0%, #0f172a 100%);
+      color:var(--text);
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+    }
+
+    .app{
+      width:min(1100px, 100%);
+      padding:22px;
+      display:grid;
+      grid-template-columns:1.3fr .9fr;
+      gap:18px;
+    }
+
+    .card{
+      background:rgba(17,24,39,.96);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .left,
+    .right{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-width:0;
+    }
+
+    .hero{
+      padding:22px;
+    }
+
+    .title{
+      margin:0 0 8px;
+      font-size:30px;
+      line-height:1.1;
+      letter-spacing:.2px;
+    }
+
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.45;
+    }
+
+    .now-playing{
+      padding:22px;
+    }
+
+    .label{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:1.4px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .track{
+      font-size:34px;
+      line-height:1.15;
+      font-weight:700;
+      margin:0 0 14px;
+      word-break:break-word;
+    }
+
+    .meta-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:14px;
+      margin-top:16px;
+    }
+
+    .meta{
+      padding:14px;
+      border-radius:12px;
+      background:var(--panel-2);
+      border:1px solid var(--border);
+    }
+
+    .meta .value{
+      font-size:18px;
+      font-weight:700;
+      line-height:1.25;
+      word-break:break-word;
+    }
+
+    .controls{
+      padding:22px;
+    }
+
+    .btn-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    button{
+      appearance:none;
+      border:none;
+      border-radius:12px;
+      padding:14px 18px;
+      background:var(--panel-2);
+      color:var(--text);
+      font-size:16px;
+      font-weight:700;
+      cursor:pointer;
+      border:1px solid var(--border);
+      min-width:140px;
+      transition:transform .08s ease, background .15s ease, border-color .15s ease;
+    }
+
+    button:hover{background:#263244}
+    button:active{transform:translateY(1px)}
+    button.primary{
+      background:var(--accent);
+      color:#062b13;
+      border-color:transparent;
+    }
+    button.primary:hover{background:var(--accent-2)}
+    button.toggle-on{
+      outline:2px solid rgba(34,197,94,.35);
+      background:#173326;
+    }
+
+    .control-block{
+      display:grid;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .row span{
+      min-width:120px;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    input[type="range"]{
+      width:min(360px, 100%);
+      accent-color:var(--accent);
+      cursor:pointer;
+    }
+
+    .small{
+      font-size:14px;
+      color:var(--muted);
+    }
+
+    .playlists{
+      padding:22px;
+      min-height:300px;
+    }
+
+    .playlist-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .playlist-item{
+      border:1px solid var(--border);
+      background:var(--panel-2);
+      border-radius:12px;
+      padding:14px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    .playlist-item.active{
+      border-color:rgba(34,197,94,.7);
+      box-shadow:inset 0 0 0 1px rgba(34,197,94,.25);
+      background:#162534;
+    }
+
+    .playlist-name{
+      font-size:18px;
+      font-weight:700;
+    }
+
+    .playlist-count{
+      color:var(--muted);
+      font-size:14px;
+      white-space:nowrap;
+    }
+
+    .status-card{
+      padding:22px;
+    }
+
+    .status-box{
+      min-height:130px;
+      max-height:240px;
+      overflow:auto;
+      background:#0b1220;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px;
+      font-family:Consolas, Monaco, monospace;
+      font-size:13px;
+      line-height:1.5;
+      color:#dbeafe;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .status-line{
+      margin:0 0 6px;
+    }
+
+    .legend{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.5;
+    }
+
+    .loop-badge{
+      display:inline-block;
+      margin-top:12px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+      background:rgba(34,197,94,.12);
+      color:#bbf7d0;
+      border:1px solid rgba(34,197,94,.3);
+    }
+
+    .footer-note{
+      padding:16px 22px 22px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    @media (max-width: 900px){
+      .app{
+        grid-template-columns:1fr;
+      }
+      .track{
+        font-size:28px;
+      }
+      .meta-grid{
+        grid-template-columns:1fr;
+      }
+      button{
+        min-width:unset;
+        flex:1 1 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="left">
+      <section class="card hero">
+        <h1 class="title">CC Radio Player</h1>
+        <p class="subtitle">
+          Local browser-based player for Creative Commons MP3 libraries. Plays every track in every playlist,
+          advances automatically, skips broken files, and repeats the full station cycle forever.
+        </p>
+        <div class="loop-badge">Station cycle repeats forever</div>
+      </section>
+
+      <section class="card now-playing">
+        <div class="label">Now Playing</div>
+        <h2 id="trackName" class="track">Ready</h2>
+
+        <div class="meta-grid">
+          <div class="meta">
+            <div class="label">Current Playlist</div>
+            <div id="currentPlaylist" class="value">—</div>
+          </div>
+          <div class="meta">
+            <div class="label">Upcoming Playlist</div>
+            <div id="nextPlaylist" class="value">—</div>
+          </div>
+          <div class="meta">
+            <div class="label">Playback Status</div>
+            <div id="playbackStatus" class="value">Stopped</div>
+          </div>
+          <div class="meta">
+            <div class="label">Track Position</div>
+            <div id="trackPosition" class="value">—</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card controls">
+        <div class="label">Controls</div>
+
+        <div class="btn-row">
+          <button id="playPauseBtn" class="primary" type="button">Play</button>
+          <button id="nextTrackBtn" type="button">Next Track</button>
+          <button id="nextPlaylistBtn" type="button">Next Playlist</button>
+          <button id="shuffleBtn" type="button" aria-pressed="false">Shuffle: Off</button>
+        </div>
+
+        <div class="control-block">
+          <div class="row">
+            <span>Master Volume</span>
+            <input id="volumeSlider" type="range" min="0" max="100" step="1" value="85" />
+            <strong id="volumeValue">85%</strong>
+          </div>
+          <div class="small">
+            Tip: for unattended playback in Chrome kiosk mode, start playback once manually if browser autoplay rules prevent automatic audio start.
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="right">
+      <section class="card playlists">
+        <div class="label">Playlists</div>
+        <ul id="playlistList" class="playlist-list"></ul>
+      </section>
+
+      <section class="card status-card">
+        <div class="label">Status / Error Log</div>
+        <div id="statusBox" class="status-box" aria-live="polite"></div>
+        <div class="legend">
+          Missing files, decode issues, or playback errors are logged here and skipped automatically.
+        </div>
+      </section>
+
+      <div class="footer-note">
+        Put your MP3 files in folders inside your repo, such as
+        <code>music/jazz/</code>, <code>music/acoustic/</code>, and <code>music/ambient/</code>.
+        Then update the playlist configuration in the script below.
+      </div>
+    </div>
+  </div>
+
+  <audio id="audio" preload="metadata"></audio>
+
+  <script>
+    /*
+      ============================================================
+      CC RADIO PLAYER CONFIG
+      ============================================================
+
+      1) Upload your MP3 files into your GitHub repo, for example:
+         /music/jazz/song1.mp3
+         /music/jazz/song2.mp3
+         /music/acoustic/song1.mp3
+         /music/ambient/song1.mp3
+
+      2) Edit the playlist names and file paths below.
+
+      3) To add more playlists later, add another object with:
+         - a "name"
+         - a "tracks" array of local MP3 file paths
+
+      Browsers cannot scan folders automatically, so each file path
+      must be listed manually here.
+    */
+
+    const SETTINGS = {
+      autostart: false,   // Set to true if you want the app to try starting on page load.
+      shuffle: false,     // Default shuffle state.
+      defaultVolume: 0.85,
+      maxConsecutiveErrors: 50
+    };
+
+    const PLAYLISTS = [
+      {
+        name: "Light Jazz",
+        tracks: [
+          "music/jazz/song1.mp3",
+          "music/jazz/song2.mp3",
+          "music/jazz/song3.mp3"
+        ]
+      },
+      {
+        name: "Acoustic",
+        tracks: [
+          "music/acoustic/song1.mp3",
+          "music/acoustic/song2.mp3",
+          "music/acoustic/song3.mp3"
+        ]
+      },
+      {
+        name: "Ambient / Chill",
+        tracks: [
+          "music/ambient/song1.mp3",
+          "music/ambient/song2.mp3",
+          "music/ambient/song3.mp3"
+        ]
+      }
+    ];
+
+    const audio = document.getElementById("audio");
+
+    const trackNameEl = document.getElementById("trackName");
+    const currentPlaylistEl = document.getElementById("currentPlaylist");
+    const nextPlaylistEl = document.getElementById("nextPlaylist");
+    const playbackStatusEl = document.getElementById("playbackStatus");
+    const trackPositionEl = document.getElementById("trackPosition");
+    const playlistListEl = document.getElementById("playlistList");
+    const statusBoxEl = document.getElementById("statusBox");
+
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const nextTrackBtn = document.getElementById("nextTrackBtn");
+    const nextPlaylistBtn = document.getElementById("nextPlaylistBtn");
+    const shuffleBtn = document.getElementById("shuffleBtn");
+    const volumeSlider = document.getElementById("volumeSlider");
+    const volumeValue = document.getElementById("volumeValue");
+
+    let playlistIndex = 0;
+    let trackIndex = 0;
+    let isPlaying = false;
+    let isShuffle = SETTINGS.shuffle;
+    let currentOrder = [];
+    let errorStreak = 0;
+    let hasAttemptedAutostart = false;
+
+    function safePlaylists() {
+      return PLAYLISTS.filter(p => p && p.name && Array.isArray(p.tracks) && p.tracks.length > 0);
+    }
+
+    function getPlaylistCount() {
+      return safePlaylists().length;
+    }
+
+    function getCurrentPlaylist() {
+      const lists = safePlaylists();
+      return lists[playlistIndex] || null;
+    }
+
+    function getNextPlaylist() {
+      const lists = safePlaylists();
+      if (!lists.length) return null;
+      return lists[(playlistIndex + 1) % lists.length];
+    }
+
+    function getCurrentTrackList() {
+      const playlist = getCurrentPlaylist();
+      if (!playlist) return [];
+      return currentOrder.length ? currentOrder : playlist.tracks.slice();
+    }
+
+    function filenameFromPath(path) {
+      try {
+        return decodeURIComponent(path.split("/").pop() || path);
+      } catch (_) {
+        return path.split("/").pop() || path;
+      }
+    }
+
+    function logStatus(message, type = "info") {
+      const now = new Date();
+      const stamp = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const prefix =
+        type === "error" ? "[ERROR]" :
+        type === "warn"  ? "[WARN]"  :
+                           "[INFO]";
+      const line = document.createElement("div");
+      line.className = "status-line";
+      line.textContent = `${stamp} ${prefix} ${message}`;
+      statusBoxEl.prepend(line);
+
+      while (statusBoxEl.children.length > 120) {
+        statusBoxEl.removeChild(statusBoxEl.lastChild);
+      }
+    }
+
+    function shuffleArray(arr) {
+      const copy = arr.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function rebuildCurrentOrder(keepCurrentTrack = false) {
+      const playlist = getCurrentPlaylist();
+      if (!playlist) {
+        currentOrder = [];
+        return;
+      }
+
+      const originalTracks = playlist.tracks.slice();
+
+      if (!isShuffle) {
+        currentOrder = originalTracks;
+        return;
+      }
+
+      const currentTrackPath = keepCurrentTrack
+        ? getCurrentTrackList()[trackIndex]
+        : null;
+
+      let shuffled = shuffleArray(originalTracks);
+
+      if (keepCurrentTrack && currentTrackPath && shuffled.includes(currentTrackPath)) {
+        shuffled = [currentTrackPath, ...shuffled.filter(t => t !== currentTrackPath)];
+        trackIndex = 0;
+      }
+
+      currentOrder = shuffled;
+    }
+
+    function updatePlaylistUI() {
+      const lists = safePlaylists();
+      playlistListEl.innerHTML = "";
+
+      lists.forEach((playlist, i) => {
+        const li = document.createElement("li");
+        li.className = "playlist-item" + (i === playlistIndex ? " active" : "");
+
+        const left = document.createElement("div");
+        const name = document.createElement("div");
+        name.className = "playlist-name";
+        name.textContent = playlist.name;
+        left.appendChild(name);
+
+        const right = document.createElement("div");
+        right.className = "playlist-count";
+        right.textContent = `${playlist.tracks.length} track${playlist.tracks.length === 1 ? "" : "s"}`;
+
+        li.appendChild(left);
+        li.appendChild(right);
+        playlistListEl.appendChild(li);
+      });
+    }
+
+    function updateUI() {
+      const playlist = getCurrentPlaylist();
+      const nextPlaylist = getNextPlaylist();
+      const trackList = getCurrentTrackList();
+      const trackPath = trackList[trackIndex];
+
+      currentPlaylistEl.textContent = playlist ? playlist.name : "No playlists configured";
+      nextPlaylistEl.textContent = nextPlaylist ? nextPlaylist.name : "—";
+      playbackStatusEl.textContent = isPlaying ? "Playing" : "Paused / Stopped";
+
+      if (playlist && trackList.length) {
+        trackNameEl.textContent = filenameFromPath(trackPath);
+        trackPositionEl.textContent = `${trackIndex + 1} of ${trackList.length}`;
+      } else {
+        trackNameEl.textContent = "No track loaded";
+        trackPositionEl.textContent = "—";
+      }
+
+      playPauseBtn.textContent = isPlaying ? "Pause" : "Play";
+      shuffleBtn.textContent = `Shuffle: ${isShuffle ? "On" : "Off"}`;
+      shuffleBtn.classList.toggle("toggle-on", isShuffle);
+      shuffleBtn.setAttribute("aria-pressed", String(isShuffle));
+
+      updatePlaylistUI();
+    }
+
+    function setVolume(value01) {
+      const clamped = Math.max(0, Math.min(1, value01));
+      audio.volume = clamped;
+      volumeSlider.value = String(Math.round(clamped * 100));
+      volumeValue.textContent = `${Math.round(clamped * 100)}%`;
+    }
+
+    function moveToNextPlaylist(resetTrackIndex = true) {
+      const lists = safePlaylists();
+      if (!lists.length) return false;
+
+      playlistIndex = (playlistIndex + 1) % lists.length;
+      if (resetTrackIndex) trackIndex = 0;
+      rebuildCurrentOrder(false);
+      logStatus(`Switched to playlist: ${getCurrentPlaylist().name}`);
+      return true;
+    }
+
+    function loadCurrentTrack() {
+      const playlist = getCurrentPlaylist();
+      const trackList = getCurrentTrackList();
+
+      if (!playlist) {
+        logStatus("No valid playlists found. Add playlists to the configuration block.", "error");
+        updateUI();
+        return false;
+      }
+
+      if (!trackList.length) {
+        logStatus(`Playlist "${playlist.name}" is empty. Skipping to next playlist.`, "warn");
+        if (moveToNextPlaylist(true)) {
+          return loadCurrentTrack();
+        }
+        return false;
+      }
+
+      if (trackIndex >= trackList.length) {
+        trackIndex = 0;
+      }
+
+      const src = trackList[trackIndex];
+      audio.src = src;
+      audio.load();
+
+      logStatus(`Loaded track: ${filenameFromPath(src)} (${playlist.name})`);
+      updateUI();
+      return true;
+    }
+
+    async function playCurrentTrack() {
+      const ok = loadCurrentTrack();
+      if (!ok) {
+        isPlaying = false;
+        updateUI();
+        return;
+      }
+
+      try {
+        await audio.play();
+        isPlaying = true;
+        errorStreak = 0;
+        updateUI();
+      } catch (err) {
+        isPlaying = false;
+        updateUI();
+        logStatus(`Playback could not start automatically: ${err.message}`, "warn");
+      }
+    }
+
+    function advanceToNextTrack() {
+      const trackList = getCurrentTrackList();
+      if (!trackList.length) return false;
+
+      trackIndex += 1;
+
+      if (trackIndex >= trackList.length) {
+        moveToNextPlaylist(true);
+      }
+
+      return true;
+    }
+
+    function skipBrokenTrack(reason = "Unknown error") {
+      errorStreak += 1;
+      const playlist = getCurrentPlaylist();
+      const trackList = getCurrentTrackList();
+      const brokenTrack = trackList[trackIndex];
+
+      logStatus(
+        `Skipping broken track${brokenTrack ? ` "${filenameFromPath(brokenTrack)}"` : ""}${playlist ? ` in ${playlist.name}` : ""}: ${reason}`,
+        "error"
+      );
+
+      if (errorStreak >= SETTINGS.maxConsecutiveErrors) {
+        isPlaying = false;
+        updateUI();
+        logStatus("Too many consecutive playback errors. Stopping playback.", "error");
+        return;
+      }
+
+      advanceToNextTrack();
+
+      if (isPlaying) {
+        playCurrentTrack();
+      } else {
+        loadCurrentTrack();
+      }
+    }
+
+    function togglePlayPause() {
+      if (!safePlaylists().length) {
+        logStatus("No playlists configured.", "error");
+        return;
+      }
+
+      if (!audio.src) {
+        playCurrentTrack();
+        return;
+      }
+
+      if (audio.paused) {
+        audio.play()
+          .then(() => {
+            isPlaying = true;
+            updateUI();
+            logStatus("Playback resumed.");
+          })
+          .catch(err => {
+            isPlaying = false;
+            updateUI();
+            logStatus(`Could not resume playback: ${err.message}`, "warn");
+          });
+      } else {
+        audio.pause();
+        isPlaying = false;
+        updateUI();
+        logStatus("Playback paused.");
+      }
+    }
+
+    function nextTrack(manual = false) {
+      if (!safePlaylists().length) return;
+      advanceToNextTrack();
+      if (isPlaying || manual) {
+        playCurrentTrack();
+      } else {
+        loadCurrentTrack();
+      }
+    }
+
+    function nextPlaylist(manual = false) {
+      if (!safePlaylists().length) return;
+      moveToNextPlaylist(true);
+      if (isPlaying || manual) {
+        playCurrentTrack();
+      } else {
+        loadCurrentTrack();
+      }
+    }
+
+    function setShuffle(nextValue) {
+      const currentTrackPath = getCurrentTrackList()[trackIndex] || null;
+      isShuffle = !!nextValue;
+      rebuildCurrentOrder(true);
+
+      if (!isShuffle && currentTrackPath) {
+        const playlist = getCurrentPlaylist();
+        const newIndex = playlist ? playlist.tracks.indexOf(currentTrackPath) : -1;
+        trackIndex = newIndex >= 0 ? newIndex : 0;
+      }
+
+      updateUI();
+      logStatus(`Shuffle turned ${isShuffle ? "on" : "off"}.`);
+    }
+
+    function initPlayer() {
+      const lists = safePlaylists();
+
+      if (!lists.length) {
+        logStatus("No valid playlists are configured. Edit PLAYLISTS in the script.", "error");
+      } else {
+        rebuildCurrentOrder(false);
+        loadCurrentTrack();
+        logStatus(`Initialized with ${lists.length} playlist(s).`);
+      }
+
+      setVolume(SETTINGS.defaultVolume);
+      updateUI();
+
+      if (SETTINGS.autostart && !hasAttemptedAutostart) {
+        hasAttemptedAutostart = true;
+        logStatus("Autostart enabled. Attempting playback...");
+        playCurrentTrack();
+      }
+    }
+
+    playPauseBtn.addEventListener("click", togglePlayPause);
+    nextTrackBtn.addEventListener("click", () => nextTrack(true));
+    nextPlaylistBtn.addEventListener("click", () => nextPlaylist(true));
+    shuffleBtn.addEventListener("click", () => setShuffle(!isShuffle));
+
+    volumeSlider.addEventListener("input", (e) => {
+      const value = Number(e.target.value) / 100;
+      setVolume(value);
+    });
+
+    audio.addEventListener("ended", () => {
+      logStatus("Track ended. Advancing...");
+      nextTrack(false);
+    });
+
+    audio.addEventListener("error", () => {
+      let message = "Audio file could not be loaded.";
+      const mediaError = audio.error;
+
+      if (mediaError) {
+        switch (mediaError.code) {
+          case mediaError.MEDIA_ERR_ABORTED:
+            message = "Playback was aborted.";
+            break;
+          case mediaError.MEDIA_ERR_NETWORK:
+            message = "Network error while loading file.";
+            break;
+          case mediaError.MEDIA_ERR_DECODE:
+            message = "Audio decode error.";
+            break;
+          case mediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            message = "File missing or format not supported.";
+            break;
+        }
+      }
+
+      skipBrokenTrack(message);
+    });
+
+    audio.addEventListener("play", () => {
+      isPlaying = true;
+      updateUI();
+    });
+
+    audio.addEventListener("pause", () => {
+      if (!audio.ended) {
+        isPlaying = false;
+        updateUI();
+      }
+    });
+
+    audio.addEventListener("loadedmetadata", () => {
+      updateUI();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        updateUI();
+      }
+    });
+
+    initPlayer();
+  </script>
+</body>
+</html>
