@@ -299,8 +299,7 @@
       <section class="card hero">
         <h1 class="title">CC Radio Player</h1>
         <p class="subtitle">
-          Local browser-based player for Creative Commons MP3 libraries. Plays every track in every playlist,
-          advances automatically, skips broken files, and repeats the full station cycle forever.
+          Creative Commons audio libraries.
         </p>
         <div class="loop-badge">Station cycle repeats forever</div>
       </section>
@@ -382,20 +381,20 @@
       CC RADIO PLAYER CONFIG
       ============================================================
 
-      1) Upload your MP3 files into your GitHub repo, for example:
-         /music/jazz/song1.mp3
-         /music/jazz/song2.mp3
-         /music/acoustic/song1.mp3
-         /music/ambient/song1.mp3
+      1) Upload your audio files into your repo, for example:
+        /music/jazz/song1.mp3
+        /music/jazz/song2.m4a
+        /music/acoustic/song1.mp3
+        /music/ambient/song1.m4a
 
-      2) Edit the playlist names and file paths below.
+        2) Edit the playlist names and file paths below.
 
-      3) To add more playlists later, add another object with:
-         - a "name"
-         - a "tracks" array of local MP3 file paths
+        3) To add more playlists later, add another object with:
+          - a "name"
+          - a "tracks" array of local audio file paths
 
-      Browsers cannot scan folders automatically, so each file path
-      must be listed manually here.
+        Browsers cannot scan folders automatically, so each file path
+        must be listed manually here.
     */
 
     const SETTINGS = {
@@ -432,7 +431,7 @@
   {
     "name": "Latin",
     "tracks": [
-      "music/Latin/decada50-2.mp3",
+      "music/Latin/decada50-2.m4a",
       "music/Latin/decada50-3.mp3",
       "music/Latin/decada50-4.mp3"
     ]
